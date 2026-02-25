@@ -27,7 +27,7 @@ function todayStr() { return fmtDate(new Date()); }
 function getDaysBetween(startStr, targetDate) {
   const start = new Date(startStr); start.setHours(0,0,0,0);
   const target = new Date(targetDate); target.setHours(0,0,0,0);
-  return Math.floor((target - start) / 86400000);
+  return Math.floor((target.getTime() - start.getTime()) / 86400000);
 }
 
 // ── CYCLE MATHS (exact spec implementation) ───────────────────────────────────
