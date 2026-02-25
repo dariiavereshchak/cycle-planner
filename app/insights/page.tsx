@@ -1,5 +1,4 @@
 import AppClient from "@/components/AppClient";
-
-export default function InsightsPage() {
+export default function Page() {
   return <AppClient />;
 }

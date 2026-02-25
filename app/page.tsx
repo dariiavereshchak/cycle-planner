@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-
+import AppClient from "@/components/AppClient";
 export default function Page() {
-  redirect("/home");
+  return <AppClient />;
 }
