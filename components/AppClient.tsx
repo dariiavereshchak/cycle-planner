@@ -64,7 +64,7 @@ function isLateLuteal(day, cycleLength, periodLength = 5) {
 
 function getLunarPhase(date) {
   const known = new Date("2000-01-06");
-  const diff = (new Date(date) - known) / 86400000;
+  const diff = (new Date(date).getTime() - known.getTime()) / 86400000;
   const cycle = ((diff % 29.53) + 29.53) % 29.53;
   if (cycle < 1.85)  return { phase: "New Moon",        emoji: "🌙", tip: "A quieter moment in the cycle. Good for planning inward." };
   if (cycle < 7.38)  return { phase: "Waxing Crescent", emoji: "🌒", tip: "Small steps forward. Good for initial momentum." };
