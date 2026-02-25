@@ -1,5 +1,5 @@
-/** @ts-nocheck */
 "use client";
+// @ts-nocheck
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
@@ -28,7 +28,7 @@ function todayStr() { return fmtDate(new Date()); }
 function getDaysBetween(startStr: string, targetDate: Date): number {
   const start = new Date(startStr); start.setHours(0,0,0,0);
   const target = new Date(targetDate); target.setHours(0,0,0,0);
-  return Math.floor((target - start) / 86400000);
+  return Math.floor((target.getTime() - start.getTime()) / 86400000);
 }
 
 // ── CYCLE MATHS (exact spec implementation) ───────────────────────────────────
@@ -65,7 +65,7 @@ function isLateLuteal(day: number, cycleLength: number, periodLength: number = 5
 
 function getLunarPhase(date: Date): { phase: string; emoji: string; tip: string } {
   const known = new Date("2000-01-06");
-  const diff = (new Date(date) - known) / 86400000;
+  const diff = (new Date(date as any).getTime() - known.getTime()) / 86400000;
   const cycle = ((diff % 29.53) + 29.53) % 29.53;
   if (cycle < 1.85)  return { phase: "New Moon",        emoji: "🌙", tip: "A quieter moment in the cycle. Good for planning inward." };
   if (cycle < 7.38)  return { phase: "Waxing Crescent", emoji: "🌒", tip: "Small steps forward. Good for initial momentum." };
