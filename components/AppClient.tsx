@@ -15,7 +15,7 @@ function FontLoader() {
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
-function fmtDate(d) {
+function fmtDate(d: Date): string {
   // Build YYYY-MM-DD from local date components to avoid UTC timezone shift
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -24,15 +24,15 @@ function fmtDate(d) {
 }
 function todayStr() { return fmtDate(new Date()); }
 
-function getDaysBetween(startStr, targetDate) {
+function getDaysBetween(startStr: string, targetDate: Date): number {
   const start = new Date(startStr); start.setHours(0,0,0,0);
   const target = new Date(targetDate); target.setHours(0,0,0,0);
-  return Math.floor((target.getTime() - start.getTime()) / 86400000);
+  return Math.floor((target - start) / 86400000);
 }
 
 // ── CYCLE MATHS (exact spec implementation) ───────────────────────────────────
 // cycleDay: wraps correctly for both past AND future dates
-function getCycleDay(startStr, cycleLength, targetDate = new Date()) {
+function getCycleDay(startStr: string, cycleLength: number, targetDate: Date = new Date()): number {
   const diff = getDaysBetween(startStr, targetDate);
   // Use modulo that handles negative diffs correctly (past starts)
   return ((diff % cycleLength) + cycleLength) % cycleLength + 1;
@@ -40,7 +40,7 @@ function getCycleDay(startStr, cycleLength, targetDate = new Date()) {
 
 // getPhaseKey requires periodLength to place phases correctly
 // Default periodLength=5 for backwards compat with TodayTab calls that omit it
-function getPhaseKey(cycleDay, cycleLength = 28, periodLength = 5) {
+function getPhaseKey(cycleDay: number, cycleLength: number = 28, periodLength: number = 5): string {
   const ovulationDay = Math.max(10, Math.min(cycleLength - 10, cycleLength - 14));
   if (cycleDay >= 1            && cycleDay <= periodLength)       return "menstrual";
   if (cycleDay >= periodLength + 1 && cycleDay <= ovulationDay - 1) return "follicular";
@@ -51,20 +51,20 @@ function getPhaseKey(cycleDay, cycleLength = 28, periodLength = 5) {
 
 // phaseForDate — the single source of truth called per day cell
 // Returns null if any required input is missing (shows white circle)
-function phaseForDate(dateStr, cycleStartDate, cycleLength, periodLength) {
+function phaseForDate(dateStr: string, cycleStartDate: string, cycleLength: number, periodLength: number): string | null {
   if (!cycleStartDate || !cycleLength || !periodLength) return null;
   const d = new Date(dateStr + "T12:00:00");
   const cycleDay = getCycleDay(cycleStartDate, cycleLength, d);
   return getPhaseKey(cycleDay, cycleLength, periodLength);
 }
 
-function isLateLuteal(day, cycleLength, periodLength = 5) {
+function isLateLuteal(day: number, cycleLength: number, periodLength: number = 5): boolean {
   return getPhaseKey(day, cycleLength, periodLength) === "luteal" && (cycleLength - day) <= 6;
 }
 
-function getLunarPhase(date) {
+function getLunarPhase(date: Date): { phase: string; emoji: string; tip: string } {
   const known = new Date("2000-01-06");
-  const diff = (new Date(date).getTime() - known.getTime()) / 86400000;
+  const diff = (new Date(date) - known) / 86400000;
   const cycle = ((diff % 29.53) + 29.53) % 29.53;
   if (cycle < 1.85)  return { phase: "New Moon",        emoji: "🌙", tip: "A quieter moment in the cycle. Good for planning inward." };
   if (cycle < 7.38)  return { phase: "Waxing Crescent", emoji: "🌒", tip: "Small steps forward. Good for initial momentum." };
@@ -77,9 +77,9 @@ function getLunarPhase(date) {
 }
 
 // ── STORAGE ───────────────────────────────────────────────────────────────────
-function lsGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
-function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-function lsDel(k) { try { localStorage.removeItem(k); } catch {} }
+function lsGet(k: string): any { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
+function lsSet(k: string, v: any): void { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+function lsDel(k: string): void { try { localStorage.removeItem(k); } catch {} }
 
 // Next.js-safe store: window.storage doesn't exist here, so we use localStorage directly.
 const MEM = {};
@@ -89,18 +89,18 @@ const store = {
   del: async (k) => { try { delete MEM[k]; lsDel(k); } catch {} },
   list: async (p) => {
     try {
-      const keys = Object.keys(localStorage).filter(k => k.startsWith(p));
+      const keys = Object.keys(localStorage).filter((k: string) => k.startsWith(p));
       return keys.length ? keys : Object.keys(MEM).filter(k => k.startsWith(p));
     } catch { return Object.keys(MEM).filter(k => k.startsWith(p)); }
   },
 };
 
-function saveCheckinLocal(date, data) {
+function saveCheckinLocal(date: string, data: any): void {
   const all = lsGet("essensheal_checkins") || {};
   all[date] = { ...all[date], ...data };
   lsSet("essensheal_checkins", all);
 }
-function loadCheckinLocal(date) {
+function loadCheckinLocal(date: string): any {
   const all = lsGet("essensheal_checkins") || {};
   return all[date] || {};
 }
@@ -155,7 +155,7 @@ const PHASE_HOME = {
 
 // ── HOME TAB ──────────────────────────────────────────────────────────────────
 // ── SEASONAL PHASE ICONS (SVG inline — explicit paths, browser-safe) ──────────
-function PhaseIcon({ phaseKey, size = 52 }) {
+function PhaseIcon({ phaseKey, size = 52 }: { phaseKey: string; size?: number }) {
 
   if (phaseKey === "menstrual") {
     // ❄️ Winter — clean 6-arm snowflake with explicit coordinates
@@ -281,7 +281,7 @@ function PhaseIcon({ phaseKey, size = 52 }) {
   return <span style={{ fontSize: size * 0.45 }}>✿</span>;
 }
 
-function HomeTab({ profile, onNavigate }) {
+function HomeTab({ profile, onNavigate }: { profile: any; onNavigate: (tab: string) => void }) {
   const pl       = profile.periodLength || 5;
   const cycleDay = getCycleDay(profile.cycleStartDate, profile.cycleLength);
   const phaseKey = getPhaseKey(cycleDay, profile.cycleLength, pl);
@@ -917,18 +917,18 @@ const S = {
   label: { fontFamily:"'Nunito', sans-serif", fontSize:11, fontWeight:700, color:"#B5ADA8", textTransform:"uppercase", letterSpacing:"0.1em" },
 };
 
-function T({ size=13, color="#5A5048", bold=false, italic=false, style={}, children }) {
+function T({ size=13, color="#5A5048", bold=false, italic=false, style={}, children }: { size?: number; color?: string; bold?: boolean; italic?: boolean; style?: any; children?: any }) {
   return <span style={{ fontFamily:"'Nunito', sans-serif", fontSize:size, color, fontWeight:bold?700:400, fontStyle:italic?"italic":"normal", lineHeight:1.6, ...style }}>{children}</span>;
 }
 
-function Block({ style, children }) {
+function Block({ style, children }: { style?: any; children?: any }) {
   return <div style={{ background:"#fff", borderRadius:14, border:"1.5px solid #F0EDE8", ...style }}>{children}</div>;
 }
 
 // ── HORMONE MINI-CHART ────────────────────────────────────────────────────────
-function HormoneChart({ cycleDay, phaseKey }) {
+function HormoneChart({ cycleDay, phaseKey }: { cycleDay: number; phaseKey: string }) {
   const phase = PHASES[phaseKey];
-  const Tip = ({ active, payload, label }) => {
+  const Tip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
     if (!active || !payload?.length) return null;
     return (
       <div style={{ background:"#fff", border:"1px solid #EDE8E3", borderRadius:9, padding:"7px 11px" }}>
@@ -972,7 +972,7 @@ function HormoneChart({ cycleDay, phaseKey }) {
 }
 
 // ── RECIPE CARD (expandable) ──────────────────────────────────────────────────
-function RecipeCard({ recipe, phase }) {
+function RecipeCard({ recipe, phase }: { recipe: any; phase: any }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ background:"rgba(255,255,255,0.8)", borderRadius:9, border:`1px solid ${phase.border}`, marginBottom:6, overflow:"hidden" }}>
@@ -996,7 +996,7 @@ function RecipeCard({ recipe, phase }) {
 }
 
 // ── GUIDE PANEL ───────────────────────────────────────────────────────────────
-function GuidePanel({ catKey, phaseKey, cycleDay }) {
+function GuidePanel({ catKey, phaseKey, cycleDay }: { catKey: string; phaseKey: string; cycleDay: number }) {
   const phase = PHASES[phaseKey];
   const g = phase.guidance[catKey];
   if (!g) return null;
@@ -1064,7 +1064,7 @@ function GuidePanel({ catKey, phaseKey, cycleDay }) {
 }
 
 // ── VITAMINS ROW ──────────────────────────────────────────────────────────────
-function VitaminsRow({ value, onChange, phaseKey }) {
+function VitaminsRow({ value, onChange, phaseKey }: { value: any; onChange: (v: any) => void; phaseKey: string }) {
   const phase = PHASES[phaseKey];
   const g = phase.guidance.vitamins;
   const [showGuide, setShowGuide] = useState(false);
@@ -1142,7 +1142,7 @@ function VitaminsRow({ value, onChange, phaseKey }) {
 }
 
 // ── HORMONAL ROW ──────────────────────────────────────────────────────────────
-function HormonalRow({ value, onChange, phaseKey, cycleDay }) {
+function HormonalRow({ value, onChange, phaseKey, cycleDay }: { value: any; onChange: (v: any) => void; phaseKey: string; cycleDay: number }) {
   const phase = PHASES[phaseKey];
   const [showGuide, setShowGuide] = useState(false);
   const [bbtUnit, setBbtUnit] = useState(value?.bbtUnit || "°C");
@@ -1223,7 +1223,7 @@ function HormonalRow({ value, onChange, phaseKey, cycleDay }) {
 }
 
 // ── STANDARD SCORE ROW ────────────────────────────────────────────────────────
-function ScoreRow({ item, value, onChange, phaseKey, cycleDay }) {
+function ScoreRow({ item, value, onChange, phaseKey, cycleDay }: { item: any; value: number; onChange: (v: number) => void; phaseKey: string; cycleDay: number }) {
   const [showGuide, setShowGuide] = useState(false);
   const phase = PHASES[phaseKey];
 
@@ -1266,7 +1266,7 @@ function ScoreRow({ item, value, onChange, phaseKey, cycleDay }) {
 }
 
 // ── SYMPTOMS BLOCK ────────────────────────────────────────────────────────────
-function SymptomsBlock({ phaseKey, selected, onChange }) {
+function SymptomsBlock({ phaseKey, selected, onChange }: { phaseKey: string; selected: string[]; onChange: (fn: (prev: string[]) => string[]) => void }) {
   const phase = PHASES[phaseKey];
   const ordered = SYMPTOM_PRIORITY[phaseKey];
   const INITIAL = 12;
@@ -1296,7 +1296,7 @@ function SymptomsBlock({ phaseKey, selected, onChange }) {
 }
 
 // ── TODAY TAB ─────────────────────────────────────────────────────────────────
-function TodayTab({ profile, logs, onSave }) {
+function TodayTab({ profile, logs, onSave }: { profile: any; logs: any[]; onSave: (log: any) => void }) {
   const pl = profile.periodLength || 5;
   const cycleDay = useMemo(() => getCycleDay(profile.cycleStartDate, profile.cycleLength), [profile]);
   const phaseKey = getPhaseKey(cycleDay, profile.cycleLength, pl);
@@ -1403,24 +1403,24 @@ const PHASE_CONTEXT = {
 
 // ── CALENDAR HISTORY STORE ────────────────────────────────────────────────────
 // Stores multiple historical menstruation Day 1 dates
-function getHistoryDates() {
+function getHistoryDates(): string[] {
   return lsGet("essensheal_day1_history") || [];
 }
-function saveHistoryDate(dateStr) {
+function saveHistoryDate(dateStr: string): void {
   const existing = getHistoryDates();
   if (!existing.includes(dateStr)) {
     const updated = [...existing, dateStr].sort();
     lsSet("essensheal_day1_history", updated);
   }
 }
-function removeHistoryDate(dateStr) {
+function removeHistoryDate(dateStr: string): void {
   const updated = getHistoryDates().filter(d => d !== dateStr);
   lsSet("essensheal_day1_history", updated);
 }
 
 // Build the effective cycle start date for a given day
 // Use the most recent history entry on or before the day being calculated
-function getEffectiveCycleStart(targetDateStr, profileCycleStart, historyDates) {
+function getEffectiveCycleStart(targetDateStr: string, profileCycleStart: string, historyDates: string[]): string {
   const allStarts = [profileCycleStart, ...historyDates].sort();
   // Find the latest entry that is <= targetDateStr
   let best = profileCycleStart;
@@ -1431,7 +1431,7 @@ function getEffectiveCycleStart(targetDateStr, profileCycleStart, historyDates) 
 }
 
 // ── CALENDAR BOTTOM SHEET ─────────────────────────────────────────────────────
-function CalendarBottomSheet({ info, isMarkedDay1, onClose, onMarkDay1, onRemoveDay1 }) {
+function CalendarBottomSheet({ info, isMarkedDay1, onClose, onMarkDay1, onRemoveDay1 }: { info: any; isMarkedDay1: boolean; onClose: () => void; onMarkDay1: (d: string) => void; onRemoveDay1: (d: string) => void }) {
   const cp = (info.phaseKey && CAL_PHASE[info.phaseKey]) || CAL_PHASE.follicular;
   const isNewMoon  = info.isNewMoon;
   const isFullMoon = info.isFullMoon;
@@ -1786,7 +1786,7 @@ function CalendarBottomSheet({ info, isMarkedDay1, onClose, onMarkDay1, onRemove
 }
 
 // ── CALENDAR TAB ──────────────────────────────────────────────────────────────
-function CalendarTab({ profile, logs, onSaveProfile }) {
+function CalendarTab({ profile, logs, onSaveProfile }: { profile: any; logs: any[]; onSaveProfile: (p: any) => void }) {
   const TODAY = fmtDate(new Date());
   const [viewMonth, setViewMonth] = useState(() => {
     const t = new Date();
@@ -2198,7 +2198,7 @@ function InsightsTab() {
 
 
 // ── SETTINGS TAB ──────────────────────────────────────────────────────────────
-function SettingsTab({ profile, onSave, onReset }) {
+function SettingsTab({ profile, onSave, onReset }: { profile: any; onSave: (p: any) => void; onReset: () => void }) {
   const [profileName, setProfileName] = useState(profile.name || "");
   const [startDate, setStartDate] = useState(profile.cycleStartDate);
   const [cycleLength, setCycleLength] = useState(Math.min(profile.cycleLength || 28, 35));
@@ -2291,7 +2291,7 @@ function SettingsTab({ profile, onSave, onReset }) {
 }
 
 // ── SETUP SCREEN ──────────────────────────────────────────────────────────────
-function SetupScreen({ onSave }) {
+function SetupScreen({ onSave }: { onSave: (p: any) => void }) {
   const [name, setName] = useState("");
   const [date, setDate] = useState(fmtDate(new Date()));
   const [length, setLength] = useState(28);
@@ -2347,7 +2347,7 @@ function SetupScreen({ onSave }) {
 }
 
 // ── BOTTOM NAV ────────────────────────────────────────────────────────────────
-function BottomNav({ tab, onChange }) {
+function BottomNav({ tab, onChange }: { tab: string; onChange: (t: string) => void }) {
   const items = [
     { id: "home",     label: "Home",     icon: "🏠" },
     { id: "today",    label: "Today",    icon: "🌸" },
