@@ -12,26 +12,4 @@ export default function TopNav() {
         ? "bg-neutral-900 text-white"
         : "text-neutral-600 hover:bg-neutral-100"
     }`;
-
-  return (
-    <div className="w-full border-b bg-white">
-      <div className="max-w-md mx-auto flex justify-between p-3">
-        <Link href="/today" className={linkStyle("/today")}>
-          Today
-        </Link>
-
-        <Link href="/calendar" className={linkStyle("/calendar")}>
-          Calendar
-        </Link>
-
-        <Link href="/history" className={linkStyle("/history")}>
-          History
-        </Link>
-
-        <Link href="/settings" className={linkStyle("/settings")}>
-          Settings
-        </Link>
-      </div>
-    </div>
-  );
 }
