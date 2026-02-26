@@ -2318,7 +2318,7 @@ function SetupScreen({ onSave }) {
       <div style={{ maxWidth:380, width:"100%" }}>
         <div style={{ textAlign:"center", marginBottom:28 }}>
           <div style={{ fontFamily:"'Cormorant', serif", fontSize:40, fontStyle:"normal", fontWeight:300, color:"#2D2926", marginBottom:8 }}>EssenSHEal</div>
-          <T size={14} color="#7A706A" style={{ display:"block" }}>Your personal operating system for life.</T>
+          <T size={14} color="#7A706A" style={{ display:"block" }}>Cycle-aware guide - Your personal operating system for life.</T>
         </div>
         <div style={{ background:"#fff", borderRadius:20, padding:"26px", border:"1.5px solid #F0EDE8", boxShadow:"0 6px 24px rgba(0,0,0,0.06)" }}>
           <div style={{ marginBottom:18 }}>
