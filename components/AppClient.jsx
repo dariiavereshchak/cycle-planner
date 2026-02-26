@@ -2291,26 +2291,48 @@ function SettingsTab({ profile, onSave, onReset }) {
 }
 
 // ── SETUP SCREEN ──────────────────────────────────────────────────────────────
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbz8CuLPWhlnIRoJAcNRPRSpc7QFsq9u3S1al6Q-uvW8t5blJAeF0zJTjcJgFm6HzvbLIA/exec";
+
 function SetupScreen({ onSave }) {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [date, setDate] = useState(fmtDate(new Date()));
   const [length, setLength] = useState(28);
   const [periodLength, setPeriodLength] = useState(5);
   const previewDay = getCycleDay(date, length);
   const previewPhase = PHASES[getPhaseKey(previewDay, length, periodLength)];
 
+  function handleBegin() {
+    // Fire-and-forget to Google Sheet — don't block the user
+    if (email.trim()) {
+      fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+      }).catch(() => {}); // silently ignore errors
+    }
+    onSave({ name: name.trim(), cycleStartDate: date, cycleLength: length, periodLength });
+  }
+
   return (
     <div style={{ minHeight:"100vh", background:"#FDFAF7", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
       <div style={{ maxWidth:380, width:"100%" }}>
         <div style={{ textAlign:"center", marginBottom:28 }}>
           <div style={{ fontFamily:"'Cormorant', serif", fontSize:40, fontStyle:"normal", fontWeight:300, color:"#2D2926", marginBottom:8 }}>EssenSHEal</div>
-          <T size={14} color="#7A706A" style={{ display:"block" }}>Your cycle-aware daily guide.</T>
+          <T size={14} color="#7A706A" style={{ display:"block" }}>Your personal operating system for life.</T>
         </div>
         <div style={{ background:"#fff", borderRadius:20, padding:"26px", border:"1.5px solid #F0EDE8", boxShadow:"0 6px 24px rgba(0,0,0,0.06)" }}>
           <div style={{ marginBottom:18 }}>
             <T size={12} bold color="#9A918A" style={{ display:"block", textTransform:"uppercase", letterSpacing:"0.09em", marginBottom:8 }}>Your name</T>
             <input type="text" value={name} onChange={e => setName(e.target.value)}
               placeholder="How should we greet you?"
+              style={{ width:"100%", padding:"11px 13px", borderRadius:11, border:"1.5px solid #EDE8E3", fontFamily:"'Nunito', sans-serif", fontSize:15, color:"#2D2926", outline:"none", background:"#FAFAF9", boxSizing:"border-box" }} />
+          </div>
+          <div style={{ marginBottom:18 }}>
+            <T size={12} bold color="#9A918A" style={{ display:"block", textTransform:"uppercase", letterSpacing:"0.09em", marginBottom:8 }}>
+              Email <span style={{ color:"#C5BDB5", fontWeight:400, textTransform:"none", letterSpacing:0 }}>(optional)</span>
+            </T>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="To stay in touch"
               style={{ width:"100%", padding:"11px 13px", borderRadius:11, border:"1.5px solid #EDE8E3", fontFamily:"'Nunito', sans-serif", fontSize:15, color:"#2D2926", outline:"none", background:"#FAFAF9", boxSizing:"border-box" }} />
           </div>
           <div style={{ marginBottom:18 }}>
@@ -2335,7 +2357,7 @@ function SetupScreen({ onSave }) {
           <div style={{ background:previewPhase.soft, borderRadius:10, padding:"10px 12px", border:`1px solid ${previewPhase.border}`, marginBottom:20 }}>
             <T size={11} color="#5A5048" style={{ lineHeight:1.6 }}>With these settings, today is <strong style={{ color:previewPhase.color }}>{previewPhase.name} phase</strong> (day {previewDay}).</T>
           </div>
-          <button onClick={() => onSave({ name: name.trim(), cycleStartDate: date, cycleLength: length, periodLength })}
+          <button onClick={handleBegin}
             style={{ width:"100%", padding:"13px", borderRadius:11, border:"none", background:"#C4796A", color:"#fff", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, cursor:"pointer" }}>
             Begin
           </button>
