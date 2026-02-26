@@ -2329,7 +2329,7 @@ function SetupScreen({ onSave }) {
           </div>
           <div style={{ marginBottom:18 }}>
             <T size={12} bold color="#9A918A" style={{ display:"block", textTransform:"uppercase", letterSpacing:"0.09em", marginBottom:8 }}>
-              Email <span style={{ color:"#C5BDB5", fontWeight:400, textTransform:"none", letterSpacing:0 }}>(optional)</span>
+              Email <span style={{ color:"#C5BDB5", fontWeight:400, textTransform:"none", letterSpacing:0 }}></span>
             </T>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="To stay in touch"
