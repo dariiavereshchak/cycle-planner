@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+android
+ios
+lib
+firebase_options.dart
+cycle_planner.iml
+.flutter-plugins-dependencies
+.dart_tool
+.idea
